@@ -11,25 +11,36 @@ from base_type import to_unicode, to_integer, UnicodeError
 from decorators import constant
 
 
+def _get_environmental_variable(key):
+    """Look up an environmental variable by key and return str."""
+    # all keys should be unicode
+    if type(key) is not unicode:
+        raise UnicodeError()
+
+    byte_string = os.environ.get(str(key))
+
+    if byte_string is None:
+        print 'The key', key, 'is not in environment.'
+        raise KeyError()
+
+    return byte_string
+
+
 def get_unicode(key):
     """Look up a environmental variable by key and return a unicode string by
     decoding the byte string to unicode with utf8."""
-    if type(key) is not unicode:
-        raise UnicodeError()
-    byte_string = os.environ.get(str(key))
-    return to_unicode(byte_string)
+    return to_unicode(_get_environmental_variable(key))
 
 
 def get_integer(key, default=None):
     """Look up an environmental variable by key and return an int."""
-    if type(key) is not unicode:
-        raise UnicodeError()
+    byte_string = default
 
-    byte_string = None
-    if default:
-        byte_string = os.environ.get(str(key), default)
-    else:
-        byte_string = os.environ.get(str(key))
+    try:
+        byte_string = _get_environmental_variable(key)
+    except KeyError as k:
+        if default is None:
+            raise k
 
     return to_integer(byte_string)
 
